@@ -6,7 +6,7 @@
 #    By: dherszen <dherszen@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/23 10:12:58 by dherszen          #+#    #+#              #
-#    Updated: 2024/09/10 00:24:56 by dherszen         ###   ########.fr        #
+#    Updated: 2024/09/10 00:40:33 by dherszen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,6 +18,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 install_path="/tmp"
+use_sudo=true
 
 # Function for colored output
 color_echo() {
@@ -25,17 +26,19 @@ color_echo() {
 }
 
 print_help() {
-    echo "Usage: $0"
+    echo "Usage: $0 [--no-sudo]"
     echo "  or   $0 --help"
     echo
-    echo "This script automate Discord' updates by downloading the latest Debian package and installing it."
+    echo "This script automates Discord updates by downloading the latest Debian package and installing it."
     echo
     echo "Options:"
-    echo "  --help:   Display this help message"
+    echo "  --help:    Display this help message"
+    echo "  --no-sudo: Install Discord without using sudo"
     echo
     echo "Examples:"
-    echo "  $0        # Update Discord"
-    echo "  $0 --help # Display this help message"
+    echo "  $0          # Update Discord with sudo"
+    echo "  $0 --no-sudo # Update Discord without sudo"
+    echo "  $0 --help   # Display this help message"
 }
 
 update_discord() {
@@ -49,22 +52,29 @@ update_discord() {
     fi
 
     color_echo "$BLUE" "Installing Discord..."
-    # Install the package with sudo - prompts for password.
-    sudo dpkg -i "${install_path}/${filename}"
-    # Install the package without sudo - if running as root won't require password. Uncomment the line below and comment the line above.
-#    dpkg -i "${install_path}/${filename}"
+    if [ "$use_sudo" = true ]; then
+        sudo dpkg -i "${install_path}/${filename}"
+    else
+        dpkg -i "${install_path}/${filename}"
+    fi
+
     if [ $? -ne 0 ]; then
         color_echo "$RED" "Failed to install Discord."
         exit 1
     fi
 
     color_echo "$GREEN" "Discord has been updated successfully."
-	rm -f "${install_path}/${filename}"
+    rm -f "${install_path}/${filename}"
 }
 
-if [ "$1" == "--help" ]; then
-    print_help
-    exit 0
-fi
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --help) print_help; exit 0 ;;
+        --no-sudo) use_sudo=false ;;
+        *) echo "Unknown parameter passed: $1"; print_help; exit 1 ;;
+    esac
+    shift
+done
 
 update_discord
