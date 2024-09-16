@@ -42,10 +42,14 @@ print_help() {
 }
 
 update_discord() {
+    local url=""
+    local filename=""
+    
+    cd ${install_path}
     url=$(curl -I "https://discord.com/api/download?platform=linux&format=deb" 2> /dev/null | grep -i location | awk '{print $2}' | tr -d '\r')
     filename=$(basename "$url")
     color_echo "$BLUE" "Downloading the latest Discord Debian package..."
-    wget "$url" -P "$install_path" -O "$filename"
+    wget "$url" -O "$filename"
     if [ $? -ne 0 ]; then
         color_echo "$RED" "Failed to download Discord package."
         exit 1
@@ -53,9 +57,11 @@ update_discord() {
 
     color_echo "$BLUE" "Installing Discord..."
     if [ "$use_sudo" = true ]; then
-        sudo dpkg -i "${install_path}/${filename}"
+    	cd ${install_path}
+        sudo dpkg -i "${filename}"
     else
-        dpkg -i "${install_path}/${filename}"
+    	cd ${install_path}
+        dpkg -i "${filename}"
     fi
 
     if [ $? -ne 0 ]; then
@@ -64,7 +70,15 @@ update_discord() {
     fi
 
     color_echo "$GREEN" "Discord has been updated successfully."
-    rm -f "${install_path}/${filename}"
+
+    color_echo "$RED" "Deleting $filename"
+    rm "$filename"
+    
+    if [ $? -ne 0 ]; then
+        color_echo "$RED" "Failed to delete Discord."
+        exit 1
+    fi
+
 }
 
 # Parse arguments
