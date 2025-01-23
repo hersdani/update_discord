@@ -6,7 +6,7 @@
 #    By: dherszen <dherszen@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/23 10:12:58 by dherszen          #+#    #+#              #
-#    Updated: 2025/01/23 14:42:00 by dherszen         ###   ########.fr        #
+#    Updated: 2025/01/23 14:49:06 by dherszen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -119,5 +119,5 @@ elif [ "$installed_version" != "$latest_version" ]; then
     color_echo "$BLUE" "A new version of Discord is available: $latest_version (installed: $installed_version)"
     update_discord
 else
-    color_echo "$GREEN" "Discord is already up-to-date (version: $installed_version) or it isn't installed using a .deb package."
+    color_echo "$GREEN" "Discord is already up-to-date (version: $installed_version)."
 fi
