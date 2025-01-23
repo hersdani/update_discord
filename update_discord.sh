@@ -6,7 +6,7 @@
 #    By: dherszen <dherszen@student.42.rio>         +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/23 10:12:58 by dherszen          #+#    #+#              #
-#    Updated: 2024/09/10 00:40:33 by dherszen         ###   ########.fr        #
+#    Updated: 2025/01/23 14:36:42 by dherszen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -41,10 +41,29 @@ print_help() {
     echo "  $0 --help   # Display this help message"
 }
 
+get_installed_version() {
+    if [ -f /usr/share/discord/resources/build_info.json ]; then
+        installed_version=$(jq -r '.version' /usr/share/discord/resources/build_info.json)
+        echo "$installed_version"
+    else
+        echo "none"
+    fi
+}
+
+get_latest_version() {
+    local url=""
+    local filename=""
+
+    url=$(curl -I "https://discord.com/api/download?platform=linux&format=deb" 2> /dev/null | grep -i location | awk '{print $2}' | tr -d '\r')
+    filename=$(basename "$url")
+    latest_version=$(echo "$filename" | grep -oP '(?<=discord-)[0-9]+\.[0-9]+\.[0-9]+')
+    echo "$latest_version"
+}
+
 update_discord() {
     local url=""
     local filename=""
-    
+
     cd ${install_path}
     url=$(curl -I "https://discord.com/api/download?platform=linux&format=deb" 2> /dev/null | grep -i location | awk '{print $2}' | tr -d '\r')
     filename=$(basename "$url")
@@ -57,10 +76,10 @@ update_discord() {
 
     color_echo "$BLUE" "Installing Discord..."
     if [ "$use_sudo" = true ]; then
-    	cd ${install_path}
+        cd ${install_path}
         sudo dpkg -i "${filename}"
     else
-    	cd ${install_path}
+        cd ${install_path}
         dpkg -i "${filename}"
     fi
 
@@ -73,12 +92,11 @@ update_discord() {
 
     color_echo "$RED" "Deleting $filename"
     rm "$filename"
-    
+
     if [ $? -ne 0 ]; then
         color_echo "$RED" "Failed to delete Discord."
         exit 1
     fi
-
 }
 
 # Parse arguments
@@ -91,4 +109,15 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-update_discord
+installed_version=$(get_installed_version)
+latest_version=$(get_latest_version)
+
+if [ "$installed_version" = "none" ]; then
+    color_echo "$RED" "Discord is not installed."
+    update_discord
+elif [ "$installed_version" != "$latest_version" ]; then
+    color_echo "$BLUE" "A new version of Discord is available: $latest_version (installed: $installed_version)"
+    update_discord
+else
+    color_echo "$GREEN" "Discord is already up-to-date (version: $installed_version), or Discord is not installed from a .deb package."
+fi
